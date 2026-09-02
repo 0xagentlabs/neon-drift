@@ -13,14 +13,14 @@ const pauseButton = document.querySelector("#pause");
 const exitFullscreenButton = document.querySelector("#exit-fullscreen");
 const gameCard = document.querySelector(".game-card");
 const runState = document.querySelector("#run-state");
-const dashMeter = document.querySelector("#dash-meter");
-const dashLabel = document.querySelector("#dash-label");
+const shieldEl = document.querySelector("#shield");
 const keys = new Set();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
 let previous = performance.now();
 let paused = false;
 let wasOver = false;
 let previousScore = 0;
+let previousLives = game.lives;
 
 function vibrate(pattern) {
   if ("vibrate" in navigator) navigator.vibrate(pattern);
@@ -75,6 +75,7 @@ async function startGame() {
   overlay.hidden = true;
   previous = performance.now();
   previousScore = game.score;
+  previousLives = game.lives;
   wasOver = false;
   vibrate(15);
 }
@@ -157,11 +158,8 @@ function render(time) {
   drawGrid(time);
   drawEntities();
   drawPlayer();
-  const cooldown = Math.max(0, 1 - game.dashCooldown / 1.8);
-  dashMeter.style.transform = `scaleX(${cooldown})`;
-  dashLabel.textContent = cooldown >= .995 ? "冲刺就绪" : "充能中";
-  ctx.fillStyle = "rgba(255,255,255,.13)"; ctx.fillRect(24, HEIGHT - 25, WIDTH - 48, 5);
-  ctx.fillStyle = "#49eaff"; ctx.fillRect(24, HEIGHT - 25, (WIDTH - 48) * cooldown, 5);
+  shieldEl.textContent = "◆".repeat(game.lives) + "◇".repeat(3 - game.lives);
+  shieldEl.setAttribute("aria-label", `剩余 ${game.lives} 格护盾`);
 }
 
 function frame(now) {
@@ -170,7 +168,9 @@ function frame(now) {
   game.update(dt, inputDirection());
   const score = Math.floor(game.score);
   if (game.score - previousScore > 50) vibrate([18, 28, 18]);
+  if (game.lives < previousLives) vibrate([45, 35, 70]);
   previousScore = game.score;
+  previousLives = game.lives;
   scoreEl.textContent = String(score).padStart(4, "0");
   if (game.over) {
     runState.textContent = "已坠毁";
@@ -188,9 +188,8 @@ function frame(now) {
 }
 
 window.addEventListener("keydown", (event) => {
-  if (["ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
+  if (["ArrowLeft", "ArrowRight"].includes(event.code)) event.preventDefault();
   keys.add(event.code);
-  if (event.code === "Space" && !event.repeat && game.dash(inputDirection() || 1)) vibrate(24);
   if (event.code === "KeyP" && !event.repeat) togglePause();
 });
 window.addEventListener("keyup", (event) => keys.delete(event.code));
@@ -207,10 +206,7 @@ for (const button of document.querySelectorAll("[data-action]")) {
   const release = () => keys.delete(code);
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    if (action === "dash") {
-      if (game.dash(inputDirection() || 1)) vibrate(24);
-    }
-    else keys.add(code);
+    keys.add(code);
   });
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
