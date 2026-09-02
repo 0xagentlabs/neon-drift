@@ -25,11 +25,16 @@ export class NeonDrift {
     this.invulnerable = 0;
     this.running = false;
     this.over = false;
+    this.events = [];
   }
 
   start() {
     if (this.over) this.reset();
     this.running = true;
+  }
+
+  drainEvents() {
+    return this.events.splice(0);
   }
 
   spawn() {
@@ -66,7 +71,9 @@ export class NeonDrift {
         if (entity.type === "core") {
           this.score += 75;
           entity.collected = true;
+          this.events.push("core");
         } else if (this.invulnerable <= 0) {
+          this.events.push("crash");
           this.lives -= 1;
           entity.collected = true;
           if (this.lives <= 0) {

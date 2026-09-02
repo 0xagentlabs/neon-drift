@@ -1,4 +1,5 @@
 import { HEIGHT, WIDTH, NeonDrift } from "./game.js";
+import { NeonAudio } from "./audio.js";
 
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
@@ -13,8 +14,10 @@ const pauseButton = document.querySelector("#pause");
 const exitFullscreenButton = document.querySelector("#exit-fullscreen");
 const gameCard = document.querySelector(".game-card");
 const runState = document.querySelector("#run-state");
+const soundButton = document.querySelector("#sound");
 const shieldEl = document.querySelector("#shield");
 const keys = new Set();
+const audio = new NeonAudio();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
 let previous = performance.now();
 let paused = false;
@@ -57,6 +60,14 @@ function syncFullscreenState() {
 
 bestEl.textContent = String(best).padStart(4, "0");
 
+function updateSoundButton() {
+  soundButton.textContent = audio.enabled ? "声音：开" : "声音：关";
+  soundButton.setAttribute("aria-label", audio.enabled ? "关闭游戏声音" : "开启游戏声音");
+  soundButton.setAttribute("aria-pressed", String(audio.enabled));
+}
+
+updateSoundButton();
+
 function showOverlay(title, copy, action) {
   overlayTitle.textContent = title;
   overlayCopy.textContent = copy;
@@ -78,6 +89,8 @@ async function startGame() {
   previousLives = game.lives;
   wasOver = false;
   vibrate(15);
+  audio.play("start");
+  audio.startMusic();
 }
 
 function togglePause() {
@@ -89,6 +102,8 @@ function togglePause() {
   runState.textContent = paused ? "已暂停" : "航行中";
   if (paused) showOverlay("信号暂停", "深呼吸。准备好后继续穿越裂隙。", "继续游戏");
   else overlay.hidden = true;
+  if (paused) audio.stopMusic();
+  else audio.startMusic();
   previous = performance.now();
 }
 
@@ -166,6 +181,7 @@ function frame(now) {
   const dt = (now - previous) / 1000;
   previous = now;
   game.update(dt, inputDirection());
+  for (const effect of game.drainEvents()) audio.play(effect);
   const score = Math.floor(game.score);
   if (game.score - previousScore > 50) vibrate([18, 28, 18]);
   if (game.lives < previousLives) vibrate([45, 35, 70]);
@@ -173,6 +189,7 @@ function frame(now) {
   previousLives = game.lives;
   scoreEl.textContent = String(score).padStart(4, "0");
   if (game.over) {
+    audio.stopMusic();
     runState.textContent = "已坠毁";
     if (score > best) {
       best = score;
@@ -199,6 +216,14 @@ pauseButton.addEventListener("click", togglePause);
 exitFullscreenButton.addEventListener("click", exitFullscreen);
 document.addEventListener("fullscreenchange", syncFullscreenState);
 document.addEventListener("webkitfullscreenchange", syncFullscreenState);
+soundButton.addEventListener("click", () => {
+  const enabled = audio.toggle();
+  updateSoundButton();
+  if (enabled) {
+    audio.play("start");
+    if (game.running) audio.startMusic();
+  }
+});
 
 for (const button of document.querySelectorAll("[data-action]")) {
   const action = button.dataset.action;

@@ -6,10 +6,9 @@
   "scripts": {
     "dev": "npx serve .",
     "test": "node --test",
-    "check": "node --check src/game.js && node --check src/main.js"
+    "check": "node --check src/game.js && node --check src/audio.js && node --check src/main.js"
   },
   "engines": {
     "node": ">=20"
   }
 }
-
