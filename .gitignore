@@ -3,3 +3,7 @@
 node_modules
 npm-debug.log*
 
+.env*
+.agent_context/
+.multica/
+AGENTS.md
