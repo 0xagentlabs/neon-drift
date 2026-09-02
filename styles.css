@@ -74,6 +74,7 @@ h1 em { color: transparent; font-style: normal; -webkit-text-stroke: 1.5px rgba(
 .scorebar small { display: block; margin-bottom: 5px; color: var(--muted); font-size: 8px; letter-spacing: .14em; }
 .scorebar strong { font-family: Syne, sans-serif; font-size: 21px; letter-spacing: .05em; }
 .run-state strong { color: var(--acid); font-family: "Space Mono", monospace; font-size: 11px; letter-spacing: .06em; }
+.shield-state strong { color: var(--cyan); font: 13px "Space Mono", monospace; letter-spacing: .12em; text-shadow: 0 0 10px rgba(73,234,255,.55); }
 .ghost { margin-left: auto; min-width: 64px; min-height: 44px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 11px; }
 .ghost:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(73,234,255,.06); }
 .ghost:active, .mobile-controls button:active { transform: scale(.96); }
@@ -93,12 +94,9 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .hint { min-height: 58px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px; color: var(--muted); font-size: 8px; border-top: 1px solid var(--line); }
 .hint > span { display: flex; align-items: center; gap: 5px; }
 kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place-items: center; border: 1px solid rgba(255,255,255,.16); border-bottom-color: rgba(255,255,255,.3); border-radius: 3px; background: rgba(255,255,255,.055); color: var(--ink); font: 8px "Space Mono", monospace; }
-.dash-status i { width: 46px; height: 3px; overflow: hidden; background: rgba(255,255,255,.13); }
-.dash-status i b { display: block; width: 100%; height: 100%; transform-origin: left; background: var(--cyan); box-shadow: 0 0 9px var(--cyan); }
-.mobile-controls { display: none; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
+.mobile-controls { display: none; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
 .mobile-controls button { min-height: 54px; border: 1px solid var(--line); background: linear-gradient(180deg, #1a2137, #12172a); color: var(--ink); transition: transform .12s ease, border-color .18s ease, background .18s ease; }
 .mobile-controls button:hover { border-color: rgba(73,234,255,.55); background: #1c2740; }
-.mobile-controls .dash { color: var(--acid); border-color: rgba(184,255,53,.45); }
 
 @keyframes pulse { 50% { opacity: .35; transform: scale(.7); } }
 
@@ -120,6 +118,7 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
   .game-card { width: 100%; }
   .scorebar { gap: 14px; padding: 0 14px; }
   .scorebar div { min-width: 68px; }
+  .run-state, .scorebar .shield-state { min-width: 0; }
   .run-state { display: none; }
 }
 

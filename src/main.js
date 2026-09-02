@@ -12,9 +12,8 @@ const overlayCopy = document.querySelector("#overlay-copy");
 const startButton = document.querySelector("#start");
 const pauseButton = document.querySelector("#pause");
 const runState = document.querySelector("#run-state");
-const dashMeter = document.querySelector("#dash-meter");
-const dashLabel = document.querySelector("#dash-label");
 const soundButton = document.querySelector("#sound");
+const shieldEl = document.querySelector("#shield");
 const keys = new Set();
 const audio = new NeonAudio();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
@@ -131,11 +130,8 @@ function render(time) {
   drawGrid(time);
   drawEntities();
   drawPlayer();
-  const cooldown = Math.max(0, 1 - game.dashCooldown / 1.8);
-  dashMeter.style.transform = `scaleX(${cooldown})`;
-  dashLabel.textContent = cooldown >= .995 ? "冲刺就绪" : "充能中";
-  ctx.fillStyle = "rgba(255,255,255,.13)"; ctx.fillRect(24, HEIGHT - 25, WIDTH - 48, 5);
-  ctx.fillStyle = "#49eaff"; ctx.fillRect(24, HEIGHT - 25, (WIDTH - 48) * cooldown, 5);
+  shieldEl.textContent = "◆".repeat(game.lives) + "◇".repeat(3 - game.lives);
+  shieldEl.setAttribute("aria-label", `剩余 ${game.lives} 格护盾`);
 }
 
 function frame(now) {
@@ -160,9 +156,8 @@ function frame(now) {
 }
 
 window.addEventListener("keydown", (event) => {
-  if (["ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
+  if (["ArrowLeft", "ArrowRight"].includes(event.code)) event.preventDefault();
   keys.add(event.code);
-  if (event.code === "Space" && !event.repeat) game.dash(inputDirection() || 1);
   if (event.code === "KeyP" && !event.repeat) togglePause();
 });
 window.addEventListener("keyup", (event) => keys.delete(event.code));
@@ -184,8 +179,7 @@ for (const button of document.querySelectorAll("[data-action]")) {
   const release = () => keys.delete(code);
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    if (action === "dash") game.dash(inputDirection() || 1);
-    else keys.add(code);
+    keys.add(code);
   });
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
