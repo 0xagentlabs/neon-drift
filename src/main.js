@@ -10,6 +10,9 @@ const overlayTitle = document.querySelector("#overlay-title");
 const overlayCopy = document.querySelector("#overlay-copy");
 const startButton = document.querySelector("#start");
 const pauseButton = document.querySelector("#pause");
+const runState = document.querySelector("#run-state");
+const dashMeter = document.querySelector("#dash-meter");
+const dashLabel = document.querySelector("#dash-label");
 const keys = new Set();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
 let previous = performance.now();
@@ -30,6 +33,7 @@ function startGame() {
   paused = false;
   pauseButton.textContent = "暂停";
   pauseButton.setAttribute("aria-label", "暂停游戏");
+  runState.textContent = "航行中";
   overlay.hidden = true;
   previous = performance.now();
 }
@@ -40,6 +44,7 @@ function togglePause() {
   game.running = !paused;
   pauseButton.textContent = paused ? "继续" : "暂停";
   pauseButton.setAttribute("aria-label", paused ? "继续游戏" : "暂停游戏");
+  runState.textContent = paused ? "已暂停" : "航行中";
   if (paused) showOverlay("信号暂停", "深呼吸。准备好后继续穿越裂隙。", "继续游戏");
   else overlay.hidden = true;
   previous = performance.now();
@@ -52,9 +57,12 @@ function inputDirection() {
 }
 
 function drawGrid(time) {
-  ctx.fillStyle = "#070a14";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.strokeStyle = "rgba(73,234,255,.11)";
+  const sky = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+  sky.addColorStop(0, "#080a1b"); sky.addColorStop(.55, "#0b1023"); sky.addColorStop(1, "#060812");
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "rgba(118,87,255,.28)";
+  ctx.beginPath(); ctx.arc(WIDTH * .72, HEIGHT * .2, 125, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "rgba(73,234,255,.1)";
   ctx.lineWidth = 1;
   const offset = (time * 0.09) % 60;
   for (let y = -60 + offset; y < HEIGHT; y += 60) {
@@ -63,12 +71,20 @@ function drawGrid(time) {
   for (let x = 0; x <= WIDTH; x += 72) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke();
   }
+  for (let i = 0; i < 24; i += 1) {
+    const x = (i * 137) % WIDTH; const y = (i * 83 + time * (.012 + (i % 3) * .004)) % HEIGHT;
+    ctx.fillStyle = i % 4 ? "rgba(255,255,255,.32)" : "rgba(73,234,255,.55)";
+    ctx.fillRect(x, y, i % 5 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
+  }
 }
 
 function drawPlayer() {
   const { x, y, w, h } = game.player;
   ctx.save();
   ctx.translate(x + w / 2, y + h / 2);
+  ctx.fillStyle = "rgba(73,234,255,.16)";
+  ctx.beginPath(); ctx.moveTo(-w * .26, h * .2); ctx.lineTo(0, h * 1.35); ctx.lineTo(w * .26, h * .2); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 24; ctx.shadowColor = "#b8ff35";
   if (game.invulnerable > 0) {
     ctx.shadowBlur = 38; ctx.shadowColor = "#49eaff"; ctx.globalAlpha = .72;
   }
@@ -101,6 +117,8 @@ function render(time) {
   drawEntities();
   drawPlayer();
   const cooldown = Math.max(0, 1 - game.dashCooldown / 1.8);
+  dashMeter.style.transform = `scaleX(${cooldown})`;
+  dashLabel.textContent = cooldown >= .995 ? "冲刺就绪" : "充能中";
   ctx.fillStyle = "rgba(255,255,255,.13)"; ctx.fillRect(24, HEIGHT - 25, WIDTH - 48, 5);
   ctx.fillStyle = "#49eaff"; ctx.fillRect(24, HEIGHT - 25, (WIDTH - 48) * cooldown, 5);
 }
@@ -112,6 +130,7 @@ function frame(now) {
   const score = Math.floor(game.score);
   scoreEl.textContent = String(score).padStart(4, "0");
   if (game.over) {
+    runState.textContent = "已坠毁";
     if (score > best) {
       best = score;
       localStorage.setItem("neon-drift-best", String(best));
@@ -150,4 +169,3 @@ for (const button of document.querySelectorAll("[data-action]")) {
 
 render(0);
 requestAnimationFrame(frame);
-
