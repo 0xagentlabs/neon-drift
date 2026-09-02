@@ -16,6 +16,8 @@ const gameCard = document.querySelector(".game-card");
 const runState = document.querySelector("#run-state");
 const soundButton = document.querySelector("#sound");
 const shieldEl = document.querySelector("#shield");
+const joystick = document.querySelector(".joystick-zone");
+const joystickKnob = document.querySelector(".joystick-knob");
 const keys = new Set();
 const audio = new NeonAudio();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
@@ -24,6 +26,8 @@ let paused = false;
 let wasOver = false;
 let previousScore = 0;
 let previousLives = game.lives;
+let joystickDirection = 0;
+let immersiveFallback = false;
 
 function vibrate(pattern) {
   if ("vibrate" in navigator) navigator.vibrate(pattern);
@@ -36,17 +40,26 @@ function fullscreenElement() {
 async function enterFullscreen() {
   if (fullscreenElement()) return;
   const request = gameCard.requestFullscreen || gameCard.webkitRequestFullscreen;
-  if (!request) return;
+  if (!request) {
+    immersiveFallback = true;
+    syncFullscreenState();
+    return;
+  }
   try {
     await request.call(gameCard);
   } catch {
-    // Fullscreen may be denied by browser or device policy.
+    immersiveFallback = true;
+    syncFullscreenState();
   }
 }
 
 async function exitFullscreen() {
   const exit = document.exitFullscreen || document.webkitExitFullscreen;
-  if (!fullscreenElement() || !exit) return;
+  if (!fullscreenElement() || !exit) {
+    immersiveFallback = false;
+    syncFullscreenState();
+    return;
+  }
   try {
     await exit.call(document);
   } catch {
@@ -55,7 +68,10 @@ async function exitFullscreen() {
 }
 
 function syncFullscreenState() {
-  gameCard.classList.toggle("is-fullscreen", Boolean(fullscreenElement()));
+  const active = Boolean(fullscreenElement()) || immersiveFallback;
+  gameCard.classList.toggle("is-fullscreen", active);
+  gameCard.classList.toggle("is-immersive", immersiveFallback);
+  document.body.classList.toggle("immersive", active);
 }
 
 bestEl.textContent = String(best).padStart(4, "0");
@@ -110,7 +126,7 @@ function togglePause() {
 function inputDirection() {
   const left = keys.has("ArrowLeft") || keys.has("KeyA");
   const right = keys.has("ArrowRight") || keys.has("KeyD");
-  return Number(right) - Number(left);
+  return joystickDirection || Number(right) - Number(left);
 }
 
 function drawGrid(time) {
@@ -133,6 +149,17 @@ function drawGrid(time) {
     ctx.fillStyle = i % 4 ? "rgba(255,255,255,.32)" : "rgba(73,234,255,.55)";
     ctx.fillRect(x, y, i % 5 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
   }
+  const beam = (Math.sin(time * .00055) + 1) / 2;
+  const glow = ctx.createRadialGradient(WIDTH * beam, HEIGHT * .62, 0, WIDTH * beam, HEIGHT * .62, 260);
+  glow.addColorStop(0, "rgba(73,234,255,.13)"); glow.addColorStop(1, "rgba(73,234,255,0)");
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.save(); ctx.globalCompositeOperation = "screen";
+  for (let i = 0; i < 9; i += 1) {
+    const y = (time * (.19 + i * .012) + i * 127) % (HEIGHT + 100) - 50;
+    ctx.fillStyle = i % 3 ? "rgba(73,234,255,.22)" : "rgba(184,255,53,.3)";
+    ctx.fillRect((i * 89 + time * .025) % WIDTH, y, 2, 20 + (i % 4) * 9);
+  }
+  ctx.restore();
 }
 
 function drawPlayer() {
@@ -216,6 +243,9 @@ pauseButton.addEventListener("click", togglePause);
 exitFullscreenButton.addEventListener("click", exitFullscreen);
 document.addEventListener("fullscreenchange", syncFullscreenState);
 document.addEventListener("webkitfullscreenchange", syncFullscreenState);
+document.addEventListener("keydown", (event) => {
+  if (event.code === "Escape" && immersiveFallback) void exitFullscreen();
+});
 soundButton.addEventListener("click", () => {
   const enabled = audio.toggle();
   updateSoundButton();
@@ -247,6 +277,31 @@ for (const button of document.querySelectorAll("[data-action]")) {
   button.addEventListener("lostpointercapture", release);
   button.addEventListener("contextmenu", (event) => event.preventDefault());
 }
+
+function resetJoystick() {
+  joystickDirection = 0;
+  joystickKnob.style.transform = "translate3d(0, 0, 0)";
+  joystick.classList.remove("is-active");
+}
+
+joystick.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  joystick.setPointerCapture(event.pointerId);
+  joystick.classList.add("is-active");
+});
+joystick.addEventListener("pointermove", (event) => {
+  if (!joystick.hasPointerCapture(event.pointerId)) return;
+  event.preventDefault();
+  const rect = joystick.querySelector(".joystick-base").getBoundingClientRect();
+  const radius = rect.width * .34;
+  const x = Math.max(-radius, Math.min(radius, event.clientX - (rect.left + rect.width / 2)));
+  const y = Math.max(-radius, Math.min(radius, event.clientY - (rect.top + rect.height / 2)));
+  joystickDirection = Math.abs(x) < radius * .16 ? 0 : x / radius;
+  joystickKnob.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+});
+joystick.addEventListener("pointerup", resetJoystick);
+joystick.addEventListener("pointercancel", resetJoystick);
+joystick.addEventListener("lostpointercapture", resetJoystick);
 
 render(0);
 requestAnimationFrame(frame);

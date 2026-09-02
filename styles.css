@@ -23,6 +23,7 @@ body {
   color: var(--ink);
   font-family: "Space Mono", monospace;
 }
+body.immersive { overflow: hidden; overscroll-behavior: none; }
 
 body::before {
   content: "";
@@ -97,20 +98,32 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .hint { min-height: 58px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px; color: var(--muted); font-size: 8px; border-top: 1px solid var(--line); }
 .hint > span { display: flex; align-items: center; gap: 5px; }
 kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place-items: center; border: 1px solid rgba(255,255,255,.16); border-bottom-color: rgba(255,255,255,.3); border-radius: 3px; background: rgba(255,255,255,.055); color: var(--ink); font: 8px "Space Mono", monospace; }
-.mobile-controls { display: none; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
+.mobile-controls { display: none; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 20px; border-top: 1px solid var(--line); background: rgba(5,7,17,.88); }
 .mobile-controls,
-.mobile-controls button {
+.mobile-controls button,
+.joystick-zone {
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
-.mobile-controls button { min-height: 64px; border: 1px solid var(--line); background: linear-gradient(180deg, #1a2137, #12172a); color: var(--ink); font-size: 16px; transition: transform .12s ease, border-color .18s ease, background .18s ease; }
+.joystick-zone { display: flex; align-items: center; gap: 14px; padding: 4px; }
+.joystick-base { position: relative; width: 88px; height: 88px; flex: 0 0 auto; border: 1px solid rgba(73,234,255,.45); border-radius: 50%; background: radial-gradient(circle, rgba(73,234,255,.16), rgba(16,21,36,.82) 64%); box-shadow: inset 0 0 24px rgba(73,234,255,.11), 0 0 24px rgba(73,234,255,.08); }
+.joystick-base::before, .joystick-base::after { content: ""; position: absolute; inset: 50% 12px auto; height: 1px; background: rgba(73,234,255,.2); }
+.joystick-base::after { transform: rotate(90deg); }
+.joystick-knob { position: absolute; z-index: 1; width: 42px; height: 42px; left: 23px; top: 23px; border: 1px solid var(--cyan); border-radius: 50%; background: linear-gradient(145deg, #263654, #11182b); box-shadow: 0 0 18px rgba(73,234,255,.32); will-change: transform; }
+.joystick-caption { color: var(--muted); font-size: 9px; letter-spacing: .12em; white-space: nowrap; }
+.touch-alternatives { display: flex; gap: 10px; }
+.mobile-controls button { width: 58px; min-height: 58px; border: 1px solid var(--line); border-radius: 50%; background: linear-gradient(180deg, #1a2137, #12172a); color: var(--ink); font-size: 22px; transition: transform .12s ease, border-color .18s ease, background .18s ease; }
 .mobile-controls button.is-pressed { transform: scale(.96); border-color: var(--cyan); background: #1c2740; }
 .mobile-controls button:hover { border-color: rgba(73,234,255,.55); background: #1c2740; }
 
 .game-card:fullscreen,
-.game-card:-webkit-full-screen {
+.game-card:-webkit-full-screen,
+.game-card.is-immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -122,7 +135,8 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
 }
 
 .game-card:fullscreen .stage,
-.game-card:-webkit-full-screen .stage {
+.game-card:-webkit-full-screen .stage,
+.game-card.is-immersive .stage {
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
@@ -131,18 +145,21 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
 }
 
 .game-card:fullscreen .mobile-controls,
-.game-card:-webkit-full-screen .mobile-controls {
-  display: grid;
+.game-card:-webkit-full-screen .mobile-controls,
+.game-card.is-immersive .mobile-controls {
+  display: flex;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
 .game-card:fullscreen .scorebar,
-.game-card:-webkit-full-screen .scorebar {
+.game-card:-webkit-full-screen .scorebar,
+.game-card.is-immersive .scorebar {
   padding-top: env(safe-area-inset-top);
 }
 
 .game-card:fullscreen .hint,
-.game-card:-webkit-full-screen .hint { display: none; }
+.game-card:-webkit-full-screen .hint,
+.game-card.is-immersive .hint { display: none; }
 
 @keyframes pulse { 50% { opacity: .35; transform: scale(.7); } }
 
@@ -152,7 +169,7 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
   .hero { grid-template-columns: 1fr; padding-top: 42px; gap: 42px; }
   .intro { padding-top: 0; }
   .game-wrap { justify-self: center; }
-  .mobile-controls { display: grid; }
+  .mobile-controls { display: flex; }
   .hint { display: none; }
 }
 
@@ -162,10 +179,21 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
   .header-actions { gap: 0; }
   h1 { font-size: 49px; }
   .game-card { width: 100%; }
-  .scorebar { gap: 14px; padding: 0 14px; }
-  .scorebar div { min-width: 68px; }
+  .scorebar { gap: 6px; padding: 0 10px; }
+  .scorebar div { min-width: 0; flex: 1 1 0; }
+  .scorebar strong { font-size: 17px; }
+  .scorebar .ghost { min-width: 48px; width: 48px; padding: 0 4px; font-size: 9px; }
   .run-state, .scorebar .shield-state { min-width: 0; }
   .run-state { display: none; }
+  .mobile-controls { padding-inline: 12px; }
+  .joystick-caption { display: none; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .game-card:fullscreen, .game-card:-webkit-full-screen, .game-card.is-immersive { grid-template-columns: minmax(0, 1fr) 150px; grid-template-rows: auto minmax(0, 1fr); }
+  .game-card:fullscreen .scorebar, .game-card:-webkit-full-screen .scorebar, .game-card.is-immersive .scorebar { grid-column: 1 / -1; min-height: 58px; }
+  .game-card:fullscreen .mobile-controls, .game-card:-webkit-full-screen .mobile-controls, .game-card.is-immersive .mobile-controls { flex-direction: column; justify-content: center; padding: 8px max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) 8px; }
+  .touch-alternatives { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
