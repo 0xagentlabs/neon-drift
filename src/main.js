@@ -10,6 +10,8 @@ const overlayTitle = document.querySelector("#overlay-title");
 const overlayCopy = document.querySelector("#overlay-copy");
 const startButton = document.querySelector("#start");
 const pauseButton = document.querySelector("#pause");
+const exitFullscreenButton = document.querySelector("#exit-fullscreen");
+const gameCard = document.querySelector(".game-card");
 const runState = document.querySelector("#run-state");
 const dashMeter = document.querySelector("#dash-meter");
 const dashLabel = document.querySelector("#dash-label");
@@ -17,6 +19,41 @@ const keys = new Set();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
 let previous = performance.now();
 let paused = false;
+let wasOver = false;
+let previousScore = 0;
+
+function vibrate(pattern) {
+  if ("vibrate" in navigator) navigator.vibrate(pattern);
+}
+
+function fullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement;
+}
+
+async function enterFullscreen() {
+  if (fullscreenElement()) return;
+  const request = gameCard.requestFullscreen || gameCard.webkitRequestFullscreen;
+  if (!request) return;
+  try {
+    await request.call(gameCard);
+  } catch {
+    // Fullscreen may be denied by browser or device policy.
+  }
+}
+
+async function exitFullscreen() {
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!fullscreenElement() || !exit) return;
+  try {
+    await exit.call(document);
+  } catch {
+    // The browser may already be leaving fullscreen.
+  }
+}
+
+function syncFullscreenState() {
+  gameCard.classList.toggle("is-fullscreen", Boolean(fullscreenElement()));
+}
 
 bestEl.textContent = String(best).padStart(4, "0");
 
@@ -27,7 +64,8 @@ function showOverlay(title, copy, action) {
   overlay.hidden = false;
 }
 
-function startGame() {
+async function startGame() {
+  await enterFullscreen();
   if (game.over) game.reset();
   game.start();
   paused = false;
@@ -36,6 +74,9 @@ function startGame() {
   runState.textContent = "航行中";
   overlay.hidden = true;
   previous = performance.now();
+  previousScore = game.score;
+  wasOver = false;
+  vibrate(15);
 }
 
 function togglePause() {
@@ -128,6 +169,8 @@ function frame(now) {
   previous = now;
   game.update(dt, inputDirection());
   const score = Math.floor(game.score);
+  if (game.score - previousScore > 50) vibrate([18, 28, 18]);
+  previousScore = game.score;
   scoreEl.textContent = String(score).padStart(4, "0");
   if (game.over) {
     runState.textContent = "已坠毁";
@@ -137,7 +180,9 @@ function frame(now) {
       bestEl.textContent = String(best).padStart(4, "0");
     }
     if (overlay.hidden) showOverlay("漂移终止", `本轮信号强度 ${score}。再来一次，打破你的纪录。`, "重新启动");
+    if (!wasOver) vibrate([80, 45, 120]);
   }
+  wasOver = game.over;
   render(now);
   requestAnimationFrame(frame);
 }
@@ -145,13 +190,16 @@ function frame(now) {
 window.addEventListener("keydown", (event) => {
   if (["ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
   keys.add(event.code);
-  if (event.code === "Space" && !event.repeat) game.dash(inputDirection() || 1);
+  if (event.code === "Space" && !event.repeat && game.dash(inputDirection() || 1)) vibrate(24);
   if (event.code === "KeyP" && !event.repeat) togglePause();
 });
 window.addEventListener("keyup", (event) => keys.delete(event.code));
 window.addEventListener("blur", () => { keys.clear(); if (game.running) togglePause(); });
 startButton.addEventListener("click", () => paused ? togglePause() : startGame());
 pauseButton.addEventListener("click", togglePause);
+exitFullscreenButton.addEventListener("click", exitFullscreen);
+document.addEventListener("fullscreenchange", syncFullscreenState);
+document.addEventListener("webkitfullscreenchange", syncFullscreenState);
 
 for (const button of document.querySelectorAll("[data-action]")) {
   const action = button.dataset.action;
@@ -159,7 +207,9 @@ for (const button of document.querySelectorAll("[data-action]")) {
   const release = () => keys.delete(code);
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    if (action === "dash") game.dash(inputDirection() || 1);
+    if (action === "dash") {
+      if (game.dash(inputDirection() || 1)) vibrate(24);
+    }
     else keys.add(code);
   });
   button.addEventListener("pointerup", release);
