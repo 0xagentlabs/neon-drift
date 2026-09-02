@@ -11,6 +11,8 @@ const overlayTitle = document.querySelector("#overlay-title");
 const overlayCopy = document.querySelector("#overlay-copy");
 const startButton = document.querySelector("#start");
 const pauseButton = document.querySelector("#pause");
+const exitFullscreenButton = document.querySelector("#exit-fullscreen");
+const gameCard = document.querySelector(".game-card");
 const runState = document.querySelector("#run-state");
 const soundButton = document.querySelector("#sound");
 const shieldEl = document.querySelector("#shield");
@@ -19,6 +21,42 @@ const audio = new NeonAudio();
 let best = Number(localStorage.getItem("neon-drift-best") || 0);
 let previous = performance.now();
 let paused = false;
+let wasOver = false;
+let previousScore = 0;
+let previousLives = game.lives;
+
+function vibrate(pattern) {
+  if ("vibrate" in navigator) navigator.vibrate(pattern);
+}
+
+function fullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement;
+}
+
+async function enterFullscreen() {
+  if (fullscreenElement()) return;
+  const request = gameCard.requestFullscreen || gameCard.webkitRequestFullscreen;
+  if (!request) return;
+  try {
+    await request.call(gameCard);
+  } catch {
+    // Fullscreen may be denied by browser or device policy.
+  }
+}
+
+async function exitFullscreen() {
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!fullscreenElement() || !exit) return;
+  try {
+    await exit.call(document);
+  } catch {
+    // The browser may already be leaving fullscreen.
+  }
+}
+
+function syncFullscreenState() {
+  gameCard.classList.toggle("is-fullscreen", Boolean(fullscreenElement()));
+}
 
 bestEl.textContent = String(best).padStart(4, "0");
 
@@ -37,7 +75,8 @@ function showOverlay(title, copy, action) {
   overlay.hidden = false;
 }
 
-function startGame() {
+async function startGame() {
+  await enterFullscreen();
   if (game.over) game.reset();
   game.start();
   paused = false;
@@ -46,6 +85,10 @@ function startGame() {
   runState.textContent = "航行中";
   overlay.hidden = true;
   previous = performance.now();
+  previousScore = game.score;
+  previousLives = game.lives;
+  wasOver = false;
+  vibrate(15);
   audio.play("start");
   audio.startMusic();
 }
@@ -140,6 +183,10 @@ function frame(now) {
   game.update(dt, inputDirection());
   for (const effect of game.drainEvents()) audio.play(effect);
   const score = Math.floor(game.score);
+  if (game.score - previousScore > 50) vibrate([18, 28, 18]);
+  if (game.lives < previousLives) vibrate([45, 35, 70]);
+  previousScore = game.score;
+  previousLives = game.lives;
   scoreEl.textContent = String(score).padStart(4, "0");
   if (game.over) {
     audio.stopMusic();
@@ -150,7 +197,9 @@ function frame(now) {
       bestEl.textContent = String(best).padStart(4, "0");
     }
     if (overlay.hidden) showOverlay("漂移终止", `本轮信号强度 ${score}。再来一次，打破你的纪录。`, "重新启动");
+    if (!wasOver) vibrate([80, 45, 120]);
   }
+  wasOver = game.over;
   render(now);
   requestAnimationFrame(frame);
 }
@@ -164,6 +213,9 @@ window.addEventListener("keyup", (event) => keys.delete(event.code));
 window.addEventListener("blur", () => { keys.clear(); if (game.running) togglePause(); });
 startButton.addEventListener("click", () => paused ? togglePause() : startGame());
 pauseButton.addEventListener("click", togglePause);
+exitFullscreenButton.addEventListener("click", exitFullscreen);
+document.addEventListener("fullscreenchange", syncFullscreenState);
+document.addEventListener("webkitfullscreenchange", syncFullscreenState);
 soundButton.addEventListener("click", () => {
   const enabled = audio.toggle();
   updateSoundButton();

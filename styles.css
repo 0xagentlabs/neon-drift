@@ -76,6 +76,9 @@ h1 em { color: transparent; font-style: normal; -webkit-text-stroke: 1.5px rgba(
 .run-state strong { color: var(--acid); font-family: "Space Mono", monospace; font-size: 11px; letter-spacing: .06em; }
 .shield-state strong { color: var(--cyan); font: 13px "Space Mono", monospace; letter-spacing: .12em; text-shadow: 0 0 10px rgba(73,234,255,.55); }
 .ghost { margin-left: auto; min-width: 64px; min-height: 44px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 11px; }
+.fullscreen-exit { display: none; margin-left: auto; }
+.game-card.is-fullscreen .fullscreen-exit { display: block; }
+.game-card.is-fullscreen #pause { margin-left: 0; }
 .ghost:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(73,234,255,.06); }
 .ghost:active, .mobile-controls button:active { transform: scale(.96); }
 .stage { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #070a14; }
@@ -97,6 +100,32 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
 .mobile-controls { display: none; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
 .mobile-controls button { min-height: 54px; border: 1px solid var(--line); background: linear-gradient(180deg, #1a2137, #12172a); color: var(--ink); transition: transform .12s ease, border-color .18s ease, background .18s ease; }
 .mobile-controls button:hover { border-color: rgba(73,234,255,.55); background: #1c2740; }
+
+.game-card:fullscreen,
+.game-card:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  border: 0;
+  background: var(--bg);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.game-card:fullscreen .stage,
+.game-card:-webkit-full-screen .stage {
+  width: min(100%, calc((100dvh - 152px) * .8));
+  height: 100%;
+  aspect-ratio: auto;
+  justify-self: center;
+}
+
+.game-card:fullscreen .mobile-controls,
+.game-card:-webkit-full-screen .mobile-controls { display: grid; }
+
+.game-card:fullscreen .hint,
+.game-card:-webkit-full-screen .hint { display: none; }
 
 @keyframes pulse { 50% { opacity: .35; transform: scale(.7); } }
 
