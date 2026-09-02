@@ -51,6 +51,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-
 .brand-mark { width: 19px; height: 19px; background: var(--acid); clip-path: polygon(50% 0, 100% 100%, 50% 77%, 0 100%); filter: drop-shadow(0 0 8px rgba(184,255,53,.55)); }
 .status { font-size: 11px; letter-spacing: .12em; color: var(--muted); }
 .status span { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--acid); box-shadow: 0 0 14px var(--acid); }
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.sound-toggle { min-height: 38px; padding: 0 13px; border: 1px solid var(--line); background: rgba(255,255,255,.035); color: var(--muted); font-size: 9px; letter-spacing: .08em; }
+.sound-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
 .hero { display: grid; grid-template-columns: .82fr 1.18fr; gap: clamp(44px, 7vw, 112px); align-items: center; padding: clamp(48px, 7vh, 88px) 0 0; }
 .intro { align-self: start; padding-top: clamp(16px, 8vh, 74px); }
 .eyebrow { margin: 0 0 26px; color: var(--acid); font-size: 10px; letter-spacing: .18em; display: flex; align-items: center; gap: 12px; }
@@ -112,6 +115,7 @@ kbd { min-width: 23px; height: 23px; padding: 0 5px; display: inline-grid; place
 @media (max-width: 440px) {
   .shell { width: 100%; padding: 0 12px 32px; }
   .status { display: none; }
+  .header-actions { gap: 0; }
   h1 { font-size: 49px; }
   .game-card { width: 100%; }
   .scorebar { gap: 14px; padding: 0 14px; }

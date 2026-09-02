@@ -51,3 +51,15 @@ test("a shard ends the run unless dash protection is active", () => {
   assert.equal(game.over, false);
 });
 
+test("gameplay events can be consumed once by the audio layer", () => {
+  const game = new NeonDrift(() => 1);
+  game.start();
+  assert.equal(game.dash(1), true);
+  assert.deepEqual(game.drainEvents(), ["dash"]);
+  assert.deepEqual(game.drainEvents(), []);
+
+  game.spawnTimer = 99;
+  game.entities = [{ type: "core", ...game.player, speed: 0, spin: 0 }];
+  game.update(0.016, 0);
+  assert.deepEqual(game.drainEvents(), ["core"]);
+});

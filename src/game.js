@@ -25,6 +25,7 @@ export class NeonDrift {
     this.invulnerable = 0;
     this.running = false;
     this.over = false;
+    this.events = [];
   }
 
   start() {
@@ -37,7 +38,12 @@ export class NeonDrift {
     this.player.x = clamp(this.player.x + direction * 105, 22, WIDTH - this.player.w - 22);
     this.dashCooldown = 1.8;
     this.invulnerable = 0.24;
+    this.events.push("dash");
     return true;
+  }
+
+  drainEvents() {
+    return this.events.splice(0);
   }
 
   spawn() {
@@ -75,13 +81,14 @@ export class NeonDrift {
         if (entity.type === "core") {
           this.score += 75;
           entity.collected = true;
+          this.events.push("core");
         } else if (this.invulnerable <= 0) {
           this.over = true;
           this.running = false;
+          this.events.push("crash");
         }
       }
     }
     this.entities = this.entities.filter((entity) => entity.y < HEIGHT + 100 && !entity.collected);
   }
 }
-
