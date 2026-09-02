@@ -21,7 +21,7 @@ export class NeonDrift {
     this.score = 0;
     this.elapsed = 0;
     this.spawnTimer = 0;
-    this.dashCooldown = 0;
+    this.lives = 3;
     this.invulnerable = 0;
     this.running = false;
     this.over = false;
@@ -30,14 +30,6 @@ export class NeonDrift {
   start() {
     if (this.over) this.reset();
     this.running = true;
-  }
-
-  dash(direction = 0) {
-    if (!this.running || this.dashCooldown > 0) return false;
-    this.player.x = clamp(this.player.x + direction * 105, 22, WIDTH - this.player.w - 22);
-    this.dashCooldown = 1.8;
-    this.invulnerable = 0.24;
-    return true;
   }
 
   spawn() {
@@ -59,7 +51,6 @@ export class NeonDrift {
     const safeDt = Math.min(dt, 0.05);
     this.elapsed += safeDt;
     this.score += safeDt * 10;
-    this.dashCooldown = Math.max(0, this.dashCooldown - safeDt);
     this.invulnerable = Math.max(0, this.invulnerable - safeDt);
     this.player.x = clamp(this.player.x + input * this.player.speed * safeDt, 22, WIDTH - this.player.w - 22);
     this.spawnTimer -= safeDt;
@@ -76,12 +67,17 @@ export class NeonDrift {
           this.score += 75;
           entity.collected = true;
         } else if (this.invulnerable <= 0) {
-          this.over = true;
-          this.running = false;
+          this.lives -= 1;
+          entity.collected = true;
+          if (this.lives <= 0) {
+            this.over = true;
+            this.running = false;
+          } else {
+            this.invulnerable = 1;
+          }
         }
       }
     }
     this.entities = this.entities.filter((entity) => entity.y < HEIGHT + 100 && !entity.collected);
   }
 }
-

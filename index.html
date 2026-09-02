@@ -40,6 +40,7 @@
           <div class="scorebar" aria-live="polite">
             <div><small>当前得分</small><strong id="score">0000</strong></div>
             <div><small>最高纪录</small><strong id="best">0000</strong></div>
+            <div class="shield-state"><small>护盾</small><strong id="shield" aria-label="剩余 3 格护盾">◆◆◆</strong></div>
             <div class="run-state"><small>状态</small><strong id="run-state">待命</strong></div>
             <button id="pause" class="ghost" type="button" aria-label="暂停游戏">暂停</button>
           </div>
@@ -49,18 +50,17 @@
             <div class="overlay" id="overlay">
               <p class="overlay-code"><span></span> READY_01</p>
               <h2 id="overlay-title">准备漂移？</h2>
-              <p id="overlay-copy">方向键或 A / D 移动，空格键启动相位冲刺。</p>
+              <p id="overlay-copy">方向键或 A / D 左右移动。避开红色裂片，三格护盾耗尽则游戏结束。</p>
               <button id="start" class="primary" type="button"><span>开始游戏</span><b aria-hidden="true">↗</b></button>
             </div>
           </div>
           <div class="mobile-controls" aria-label="触控操作">
             <button type="button" data-action="left" aria-label="向左移动">左移</button>
-            <button type="button" data-action="dash" class="dash" aria-label="相位冲刺">冲刺</button>
             <button type="button" data-action="right" aria-label="向右移动">右移</button>
           </div>
           <div class="hint">
             <span><kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 移动</span>
-            <span class="dash-status"><i><b id="dash-meter"></b></i><span id="dash-label">冲刺就绪</span> <kbd>SPACE</kbd></span>
+            <span>碰撞会消耗 1 格护盾</span>
           </div>
           </div>
         </div>
