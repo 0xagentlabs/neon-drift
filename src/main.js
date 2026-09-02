@@ -228,14 +228,24 @@ soundButton.addEventListener("click", () => {
 for (const button of document.querySelectorAll("[data-action]")) {
   const action = button.dataset.action;
   const code = action === "left" ? "ArrowLeft" : "ArrowRight";
-  const release = () => keys.delete(code);
+  const release = (event) => {
+    event?.preventDefault();
+    keys.delete(code);
+    button.classList.remove("is-pressed");
+    if (event?.pointerId !== undefined && button.hasPointerCapture(event.pointerId)) {
+      button.releasePointerCapture(event.pointerId);
+    }
+  };
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    button.setPointerCapture(event.pointerId);
     keys.add(code);
+    button.classList.add("is-pressed");
   });
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
-  button.addEventListener("pointerleave", release);
+  button.addEventListener("lostpointercapture", release);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
 }
 
 render(0);
