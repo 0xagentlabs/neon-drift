@@ -52,3 +52,18 @@ test("shards consume shields and the third hit ends the run", () => {
   }
   assert.equal(game.over, true);
 });
+
+test("gameplay events can be consumed once by the audio layer", () => {
+  const game = new NeonDrift(() => 1);
+  game.start();
+  game.spawnTimer = 99;
+  game.entities = [{ type: "core", ...game.player, speed: 0, spin: 0 }];
+  game.update(0.016, 0);
+  assert.deepEqual(game.drainEvents(), ["core"]);
+  assert.deepEqual(game.drainEvents(), []);
+
+  game.invulnerable = 0;
+  game.entities = [{ type: "shard", ...game.player, speed: 0, spin: 0 }];
+  game.update(0.016, 0);
+  assert.deepEqual(game.drainEvents(), ["crash"]);
+});
