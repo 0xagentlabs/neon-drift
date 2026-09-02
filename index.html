@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080b17" />
+    <meta name="description" content="Neon Drift，一分钟上手的霓虹闪避街机游戏。" />
+    <title>Neon Drift — 霓虹漂移</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+    <main class="shell">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="Neon Drift 首页">
+          <span class="brand-mark" aria-hidden="true"></span>
+          NEON / DRIFT
+        </a>
+        <div class="status"><span></span> SYSTEM ONLINE</div>
+      </header>
+
+      <section class="hero">
+        <div class="intro">
+          <p class="eyebrow">ARCADE EXPERIMENT // 01</p>
+          <h1>在光速里<br /><em>活久一点。</em></h1>
+          <p class="lede">驾驶脉冲艇，闪避红色裂片，收集能量核心。速度会越来越快，你的反应有多快？</p>
+          <div class="legend" aria-label="游戏规则">
+            <span><i class="swatch danger"></i>避开裂片</span>
+            <span><i class="swatch core"></i>收集核心</span>
+          </div>
+        </div>
+
+        <div class="game-card">
+          <div class="scorebar" aria-live="polite">
+            <div><small>SCORE</small><strong id="score">0000</strong></div>
+            <div><small>BEST</small><strong id="best">0000</strong></div>
+            <button id="pause" class="ghost" type="button" aria-label="暂停游戏">暂停</button>
+          </div>
+          <div class="stage" id="stage">
+            <canvas id="game" width="720" height="900" aria-label="Neon Drift 游戏画布"></canvas>
+            <div class="overlay" id="overlay">
+              <p class="overlay-code">READY_01</p>
+              <h2 id="overlay-title">准备漂移？</h2>
+              <p id="overlay-copy">方向键或 A / D 移动，空格键启动相位冲刺。</p>
+              <button id="start" class="primary" type="button">开始游戏</button>
+            </div>
+          </div>
+          <div class="mobile-controls" aria-label="触控操作">
+            <button type="button" data-action="left" aria-label="向左移动">左移</button>
+            <button type="button" data-action="dash" class="dash" aria-label="相位冲刺">冲刺</button>
+            <button type="button" data-action="right" aria-label="向右移动">右移</button>
+          </div>
+          <div class="hint"><span>移动 A / D 或 ← / →</span><span>冲刺 SPACE</span></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
