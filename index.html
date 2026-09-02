@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#080b17" />
     <meta name="description" content="Neon Drift，一分钟上手的霓虹闪避街机游戏。" />
     <title>Neon Drift — 霓虹漂移</title>
@@ -59,8 +59,14 @@
             </div>
           </div>
           <div class="mobile-controls" aria-label="触控操作">
-            <button type="button" data-action="left" aria-label="向左移动">左移</button>
-            <button type="button" data-action="right" aria-label="向右移动">右移</button>
+            <div class="joystick-zone" aria-hidden="true">
+              <div class="joystick-base"><span class="joystick-knob"></span></div>
+              <span class="joystick-caption">拖动转向</span>
+            </div>
+            <div class="touch-alternatives" aria-label="转向按钮">
+              <button type="button" data-action="left" aria-label="向左移动">←</button>
+              <button type="button" data-action="right" aria-label="向右移动">→</button>
+            </div>
           </div>
           <div class="hint">
             <span><kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 移动</span>
